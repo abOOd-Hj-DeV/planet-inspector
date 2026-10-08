@@ -1,17 +1,136 @@
-# untitled1
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
 # planet-inspector
+
+**Plant Finder**: تطبيق Flutter للتعرف على النباتات من صورة، مع حسابات محلية وسجل مستقل لكل مستخدم. يحتفظ التصميم بصور المشروع الأصلية وألوانه الخضراء والبرتقالية.
+
+## الميزات
+
+- اختيار صورة من المعرض أو التقاطها بالكاميرا، ثم إرسالها إلى خدمة التعرف الخارجية.
+- تسجيل حساب وتسجيل الدخول واستعادة الجلسة بعد إعادة فتح التطبيق.
+- حفظ نسخة دائمة من صور الفحص الناجح، مع اسم النبات ووصفه.
+- البحث في السجل، الفرز بالأحدث/الأقدم/الاسم، والمفضلة.
+- حذف فحص منفرد أو مسح سجل الحساب الحالي بعد التأكيد.
+- عرض عدد الفحوصات والمفضلة في الصفحة الرئيسية.
+- تخطيطات قابلة للتمرير، دعم الشاشات الصغيرة والأفقية، ومعالجة حالات التحميل والفراغ والخطأ والصور المفقودة.
+
+## المتطلبات والتشغيل
+
+- Flutter **3.44.2 stable** (إصدار CI والاختبارات البصرية)، مع Dart المرفق به.
+- Android SDK وJava 17؛ أو macOS + Xcode لتشغيل iOS.
+- خادم يتوافق مع واجهة التعرف الموضحة أدناه. **الخادم والنموذج غير موجودين في هذا المستودع.**
+- Android هو منصة التشغيل الأساسية. ملفات منصات أخرى موروثة من المشروع الأصلي؛ لا يُدّعى دعم Web/Windows/Linux لأن تخزين التطبيق يستخدم SQLite وملفات محلية أصلية. اختبارات Flutter تعمل على Linux دون تشغيل التطبيق الأصلي.
+
+```bash
+git clone https://github.com/abOOd-Hj-DeV/planet-inspector.git
+cd planet-inspector
+flutter pub get
+flutter devices
+flutter run --dart-define=PLANT_API_URL=http://192.168.1.110:5000
+```
+
+استبدل عنوان الخادم بعنوان جهازك. لمحاكي Android الذي يتصل بخادم يعمل على الكمبيوتر:
+
+```bash
+flutter run --dart-define=PLANT_API_URL=http://10.0.2.2:5000
+flutter build apk --release --dart-define=PLANT_API_URL=https://your-server.example
+```
+
+`PLANT_API_URL` عنوان أساسي دون `/identify_plant`. الافتراضي هو عنوان LAN الأصلي للمشروع؛ لا يمثل خدمة عامة تعمل تلقائيًا. يجب تمرير الخيار عند كل build/run؛ تغيير القيمة يتطلب إعادة التشغيل، لا hot reload.
+
+### Windows + WSL2
+
+بعد تثبيت Flutter وAndroid SDK وربط الهاتف بـWSL عبر `usbipd`:
+
+```bash
+cd /mnt/c/Users/1/Desktop/planet-inspector
+git pull
+flutter pub get
+adb devices
+flutter run -d DEVICE_ID --dart-define=PLANT_API_URL=http://YOUR_SERVER_IP:5000
+```
+
+استبدل `DEVICE_ID` و`YOUR_SERVER_IP` بالقيم الفعلية. لا تستخدم `localhost` للإشارة إلى الكمبيوتر من الهاتف.
+
+## واجهة التعرف على النبات
+
+```http
+POST /identify_plant
+Content-Type: multipart/form-data
+```
+
+الحقل `image` يحمل الصورة بصيغة JPEG؛ تُصحح اتجاهاتها وتُصغر إلى عرض أقصى 800 بكسل وتُضغط قبل الإرسال والحفظ.
+
+استجابة نجاح متوقعة:
+
+```json
+{
+  "name": "Dracaena fragrans",
+  "description": { "value": "A tropical evergreen plant." }
+}
+```
+
+يمكن أيضًا أن يكون `description` نصًا مباشرًا. الاستجابة الفارغة، JSON غير صالح، اسم فارغ، أخطاء HTTP وانقطاع/بطء الاتصال تظهر كخطأ **ولا تحفظ فحصًا فاشلًا**. لا يقدّم التطبيق ضمانًا لدقة النموذج أو نصائح زراعية مؤكدة؛ أُزيل ادعاء الدقة 99% وقائمة صلاحية الزراعة الصحراوية غير الموثقة.
+
+## الهيكلة
+
+```text
+lib/
+  main.dart       # تهيئة الاعتماديات مرة واحدة
+  app/            # التطبيق والثيم والمسارات والتحقق من المدخلات
+  controllers/    # الجلسة والسجل ودورة اختيار/تحليل/حفظ الصورة
+  data/           # واجهات المستودعات وتخزين SQLite
+  models/         # بيانات المستخدم والصور واستجابة التعرف
+  services/       # HTTP وحفظ/ضغط الصور
+  screens/        # الترحيب والدخول والتسجيل والرئيسية والسجل والنتائج وSplash
+  widgets/        # مكونات الصور والحوارات والحالات والإجراءات المشتركة
+test/
+  unit/           # منطق التطبيق، HTTP، ترحيل SQLite وعزل المستخدمين
+  widget/         # النماذج والتنقل والتفاعل والتخطيطات
+  golden/         # مقارنة لقطات الشاشات مع صور مرجعية
+  support/        # اعتماديات اختبار بديلة، دون شبكة أو كاميرا حقيقية
+```
+
+يبقى GetX لإدارة الحالة والتنقل، دون إدخال إطار معماري جديد. المتحكمات لا تسجل بعضها أثناء الاستيراد، ومنطق البيانات منفصل عن الشاشات ويمكن اختباره مستقلًا.
+
+## الاختبارات
+
+```bash
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test --coverage
+```
+
+تشغيل قسم محدد:
+
+```bash
+flutter test test/unit
+flutter test test/widget
+flutter test test/golden
+```
+
+### Visual / Golden tests
+
+تغطي الشاشات السبعة بأحجام 320×568، 390×844، 844×390، 800×1000، إضافة إلى السجل والنتائج الممتلئة بالمقاسين 390×844 و569×320 وحوار التفاصيل. تختبر اختبارات الواجهات إمكانية الوصول للبطاقات وزر الفحص بالتمرير عند فتح لوحة المفاتيح وعلى الشاشة الأفقية القصيرة. الصور المرجعية داخل `test/golden/baselines`. تستخدم الاختبارات بيانات ثابتة وخطوط Roboto وMaterial Icons المرفقة مع Flutter لعرض نصوص وأيقونات فعلية؛ ليست صورًا لخادم إنتاج.
+
+للتحديث بعد تعديل بصري مقصود فقط، باستخدام **Flutter 3.44.2 على Linux**:
+
+```bash
+flutter test --update-goldens test/golden
+flutter test test/golden
+```
+
+راجع فروق الصور قبل اعتمادها. لا تحدث المرجع لإخفاء خلل. عند الفشل يولد Flutter صور expected/actual/diff داخل `test/golden/failures`. يعمل GitHub Actions تلقائيًا لفحص التنسيق والتحليل والاختبارات، ويرفع تقرير التغطية وصور الفشل إن وجدت.
+
+الـGolden tests تكمل ولا تستبدل تجربة التطبيق الحقيقي: جرّب التسجيل والدخول، الإلغاء/الرفض في منتقي الصور، التحليل الناجح وفشل الاتصال، البحث والمفضلة والحذف وتسجيل الخروج والدخول بحساب آخر.
+
+## البيانات والتوافق
+
+- يحتفظ التطبيق بملفي `app_database.db` للمستخدمين و`images.db` للفحوصات، وبمسارات التنقل الأصلية، لتجنب فقدان بيانات النسخة القديمة.
+- ترحيل `images.db` من الإصدار 1 إلى 2 يضيف `isFavorite` دون حذف السجل؛ اختباره يستخدم SQLite حقيقية داخل مجلد مؤقت.
+- كل عمليات السجل، بما فيها الحذف والمسح والمفضلة، مقيدة بمعرّف المستخدم.
+- الصور الجديدة تحفظ في `plant_photos` داخل مجلد التطبيق. الصور القديمة المفقودة تعرض بديلًا بدل انهيار الواجهة. حذف السجل يحذف صفوف SQLite؛ قد تبقى ملفات الصور داخل مساحة التطبيق حتى مسح بياناته.
+
+## حدود الأمان والإصدار
+
+هذا مشروع تعليمي محلي، **ليس نظام حسابات إنتاجيًا**: كلمات المرور ما زالت مخزنة محليًا بالنص الصريح حفاظًا على توافق الحسابات القديمة، والجلسة في SharedPreferences. لا تستخدم كلمات مرور حقيقية أو مشتركة مع خدمات أخرى. إصدار إنتاج يحتاج مصادقة خادمية وتجزئة كلمات مرور مناسبة وتخزينًا آمنًا وسياسة خصوصية فعلية.
+
+Android يسمح بـHTTP للتوافق مع خادم LAN الأصلي؛ استخدم HTTPS وقيد/أزل السماح بـcleartext قبل النشر. iOS يتطلب HTTPS افتراضيًا؛ أُضيفت رسائل إذن الكاميرا والصور لكن لم تُلغَ حماية ATS. إعداد release الموروث يستخدم مفتاح debug؛ يجب إعداد توقيع نشر خاص بك. تشغيل/بناء iOS يحتاج تحققًا منفصلًا على macOS.
