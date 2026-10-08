@@ -185,6 +185,55 @@ void main() {
     await tester.pumpAndSettle();
     expect(history.images, isEmpty);
   });
+
+  for (final keyboard in [false, true]) {
+    testWidgets(
+      'history cards remain reachable in ${keyboard ? 'portrait with keyboard' : 'short landscape'}',
+      (tester) async {
+        tester.view.physicalSize = keyboard
+            ? const Size(320, 568)
+            : const Size(569, 320);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final history = Get.find<ImageController>();
+        await history.repository.save(
+          const ImageModel(
+            plantName: 'Reachable plant',
+            description: '',
+            imagePath: '/missing.jpg',
+          ),
+          1,
+        );
+        await history.loadImages(1);
+        await mount(
+          tester,
+          const HistoryScreen(),
+          keyboard: keyboard ? 260 : 0,
+        );
+        await tester.scrollUntilVisible(
+          find.text('Reachable plant'),
+          150,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Reachable plant').hitTestable(), findsOneWidget);
+        await tester.scrollUntilVisible(
+          find.widgetWithText(ElevatedButton, 'Make a new search'),
+          150,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find
+              .widgetWithText(ElevatedButton, 'Make a new search')
+              .hitTestable(),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
   for (final screen in <Widget>[
     const WelcomeScreen(),
     const AuthScreen(),

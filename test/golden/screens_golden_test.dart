@@ -78,24 +78,39 @@ void main() {
     'history_populated': const HistoryScreen(),
     'results_populated': const ResultsScreen(),
   }.entries) {
-    testWidgets('${screen.key} mobile', (tester) async {
-      final history = Get.find<ImageController>();
-      await history.repository.save(
-        ImageModel(
-          plantName: 'Dracaena fragrans',
-          description: 'A tropical evergreen plant.',
-          imagePath: File('img/flower.png').absolute.path,
-          isFavorite: true,
-        ),
-        1,
-      );
-      await history.loadImages(1);
-      await render(tester, screen.value, const Size(390, 844));
-      await expectLater(
-        find.byKey(_capture),
-        matchesGoldenFile('baselines/${screen.key}_mobile.png'),
-      );
-    });
+    for (final size in <String, Size>{
+      'mobile': const Size(390, 844),
+      'short_landscape': const Size(569, 320),
+    }.entries) {
+      testWidgets('${screen.key} ${size.key}', (tester) async {
+        final history = Get.find<ImageController>();
+        await history.repository.save(
+          ImageModel(
+            plantName: 'Dracaena fragrans',
+            description: 'A tropical evergreen plant.',
+            imagePath: File('img/flower.png').absolute.path,
+            isFavorite: true,
+          ),
+          1,
+        );
+        await history.loadImages(1);
+        await render(tester, screen.value, size.value);
+        if (size.key == 'short_landscape') {
+          await tester.scrollUntilVisible(
+            find.text('Dracaena fragrans'),
+            100,
+            scrollable: find.byType(Scrollable).first,
+          );
+          await tester.pumpAndSettle();
+        }
+        expect(find.text('Dracaena fragrans').hitTestable(), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await expectLater(
+          find.byKey(_capture),
+          matchesGoldenFile('baselines/${screen.key}_${size.key}.png'),
+        );
+      });
+    }
   }
   testWidgets('plant details mobile', (tester) async {
     await render(tester, const HistoryScreen(), const Size(390, 844));

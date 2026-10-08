@@ -51,81 +51,83 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
       body: PageBody(
         maxWidth: 900,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _search,
-                    onChanged: (value) => history.query.value = value,
-                    decoration: const InputDecoration(
-                      labelText: 'Search history',
-                      suffixIcon: Icon(Icons.search),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _search,
+                      onChanged: (value) => history.query.value = value,
+                      decoration: const InputDecoration(
+                        labelText: 'Search history',
+                        suffixIcon: Icon(Icons.search),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Obx(
-                    () => Wrap(
-                      spacing: 12,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        FilterChip(
-                          label: const Text('Favorites'),
-                          selected: history.favoritesOnly.value,
-                          onSelected: (value) =>
-                              history.favoritesOnly.value = value,
-                        ),
-                        SizedBox(
-                          width: 260,
-                          child: DropdownButton<HistorySort>(
-                            isExpanded: true,
-                            value: history.sort.value,
-                            items: const [
-                              DropdownMenuItem(
-                                value: HistorySort.newest,
-                                child: Text(
-                                  'Newest first',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: HistorySort.oldest,
-                                child: Text(
-                                  'Oldest first',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: HistorySort.name,
-                                child: Text(
-                                  'Name A–Z',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              if (value != null) history.sort.value = value;
-                            },
+                    const SizedBox(height: 12),
+                    Obx(
+                      () => Wrap(
+                        spacing: 12,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          FilterChip(
+                            label: const Text('Favorites'),
+                            selected: history.favoritesOnly.value,
+                            onSelected: (value) =>
+                                history.favoritesOnly.value = value,
                           ),
-                        ),
-                      ],
+                          SizedBox(
+                            width: 260,
+                            child: DropdownButton<HistorySort>(
+                              isExpanded: true,
+                              value: history.sort.value,
+                              items: const [
+                                DropdownMenuItem(
+                                  value: HistorySort.newest,
+                                  child: Text(
+                                    'Newest first',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: HistorySort.oldest,
+                                  child: Text(
+                                    'Oldest first',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: HistorySort.name,
+                                  child: Text(
+                                    'Name A–Z',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                if (value != null) history.sort.value = value;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-            Expanded(
-              child: Obx(() {
-                final images = history.filteredImages;
-                if (history.isLoading.value ||
-                    history.error.value.isNotEmpty ||
-                    images.isEmpty) {
-                  return HistoryState(
+            Obx(() {
+              final images = history.filteredImages;
+              if (history.isLoading.value ||
+                  history.error.value.isNotEmpty ||
+                  images.isEmpty) {
+                return SliverToBoxAdapter(
+                  child: HistoryState(
                     loading: history.isLoading.value,
                     error: history.error.value,
                     filtered:
@@ -134,18 +136,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     onRetry: () => history.loadImages(
                       Get.find<AuthController>().userId.value,
                     ),
-                  );
-                }
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    final columns = constraints.maxWidth < 360
-                        ? 1
-                        : constraints.maxWidth < 650
-                        ? 2
-                        : 3;
-                    final textScale = MediaQuery.textScalerOf(context).scale(1);
-                    return GridView.builder(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                  ),
+                );
+              }
+              return SliverLayoutBuilder(
+                builder: (context, constraints) {
+                  final columns = constraints.crossAxisExtent < 360
+                      ? 1
+                      : constraints.crossAxisExtent < 650
+                      ? 2
+                      : 3;
+                  final textScale = MediaQuery.textScalerOf(context).scale(1);
+                  return SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                    sliver: SliverGrid.builder(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: columns,
                         crossAxisSpacing: 16,
@@ -191,17 +195,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                         );
                       },
-                    );
-                  },
-                );
-              }),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: ElevatedButton.icon(
-                onPressed: () => Get.toNamed(AppRoutes.results),
-                icon: const Icon(Icons.add_a_photo_outlined),
-                label: const Text('Make a new search'),
+                    ),
+                  );
+                },
+              );
+            }),
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: ElevatedButton.icon(
+                    onPressed: () => Get.toNamed(AppRoutes.results),
+                    icon: const Icon(Icons.add_a_photo_outlined),
+                    label: const Text('Make a new search'),
+                  ),
+                ),
               ),
             ),
           ],
