@@ -15,7 +15,7 @@ class HistoryState extends StatelessWidget {
   final VoidCallback onRetry;
   @override
   Widget build(BuildContext context) => Center(
-    child: Padding(
+    child: SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: loading
           ? const CircularProgressIndicator()

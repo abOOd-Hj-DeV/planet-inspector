@@ -44,7 +44,12 @@ void main() {
     tester,
   ) async {
     await mount(tester, const AuthScreen(isRegister: true));
-    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'Sign Up'));
+    await tester.scrollUntilVisible(
+      find.widgetWithText(ElevatedButton, 'Sign Up'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ElevatedButton, 'Sign Up'));
     await tester.pumpAndSettle();
     expect(find.text('This field is required.'), findsNWidgets(4));
@@ -207,7 +212,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await mount(tester, const AuthScreen(isRegister: true), keyboard: 260);
-    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'Sign Up'));
+    await tester.scrollUntilVisible(
+      find.widgetWithText(ElevatedButton, 'Sign Up'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ElevatedButton, 'Sign Up'));
     await tester.pumpAndSettle();
     expect(find.text('This field is required.'), findsNWidgets(4));
@@ -216,6 +226,6 @@ void main() {
 }
 
 Future<void> setupLoggedOut() async {
-  await Get.reset();
+  Get.reset();
   await setupControllers(loggedIn: false);
 }

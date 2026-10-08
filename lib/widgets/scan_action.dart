@@ -8,8 +8,9 @@ import 'plant_details_dialog.dart';
 Future<void> scanPhoto(BuildContext context, ImageSource source) async {
   try {
     final result = await Get.find<PlantController>().pickAndIdentify(source);
-    if (result != null && context.mounted)
+    if (result != null && context.mounted) {
       await showPlantDetails(context, result);
+    }
   } catch (error) {
     if (!context.mounted) return;
     final message = error is PlantServiceException

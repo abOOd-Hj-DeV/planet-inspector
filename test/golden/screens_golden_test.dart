@@ -24,7 +24,11 @@ Future<void> render(WidgetTester tester, Widget screen, Size size) async {
   await tester.pumpWidget(
     RepaintBoundary(
       key: _capture,
-      child: MaterialApp(theme: appTheme, home: screen),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: appTheme,
+        home: screen,
+      ),
     ),
   );
   await tester.runAsync(() async {

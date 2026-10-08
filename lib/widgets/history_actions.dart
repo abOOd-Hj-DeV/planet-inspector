@@ -36,12 +36,13 @@ Future<void> changeHistory(
     final userId = Get.find<AuthController>().userId.value;
     if (userId > 0) await action(userId);
   } catch (_) {
-    if (context.mounted)
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Could not update history. Please try again.'),
         ),
       );
+    }
   }
 }
 

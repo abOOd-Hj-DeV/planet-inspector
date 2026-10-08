@@ -14,6 +14,7 @@ class ImageController extends GetxController {
   final favoritesOnly = false.obs;
   final sort = HistorySort.newest.obs;
   int _loadVersion = 0;
+  int _userId = 0;
 
   List<ImageModel> get filteredImages {
     final search = query.value.trim().toLowerCase();
@@ -39,6 +40,7 @@ class ImageController extends GetxController {
   }
 
   Future<void> loadImages(int userId) async {
+    _userId = userId;
     final version = ++_loadVersion;
     isLoading.value = true;
     error.value = '';
@@ -46,8 +48,9 @@ class ImageController extends GetxController {
       final result = await repository.load(userId);
       if (version == _loadVersion) images.assignAll(result);
     } catch (_) {
-      if (version == _loadVersion)
+      if (version == _loadVersion) {
         error.value = 'Could not load history. Please retry.';
+      }
     } finally {
       if (version == _loadVersion) isLoading.value = false;
     }
@@ -55,6 +58,7 @@ class ImageController extends GetxController {
 
   void clearImages() {
     _loadVersion++;
+    _userId = 0;
     images.clear();
     query.value = '';
     favoritesOnly.value = false;
@@ -65,18 +69,18 @@ class ImageController extends GetxController {
 
   Future<void> clearHistory(int userId) async {
     await repository.clear(userId);
-    await loadImages(userId);
+    if (_userId == userId) await loadImages(userId);
   }
 
   Future<void> deleteImage(ImageModel image, int userId) async {
     if (image.id == null) return;
     await repository.delete(image.id!, userId);
-    await loadImages(userId);
+    if (_userId == userId) await loadImages(userId);
   }
 
   Future<void> toggleFavorite(ImageModel image, int userId) async {
     if (image.id == null) return;
     await repository.setFavorite(image.id!, userId, !image.isFavorite);
-    await loadImages(userId);
+    if (_userId == userId) await loadImages(userId);
   }
 }

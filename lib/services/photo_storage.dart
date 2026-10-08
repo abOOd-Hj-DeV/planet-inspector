@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as image;
 import 'package:path/path.dart' as path;
@@ -10,9 +9,15 @@ abstract class PhotoStorage {
 }
 
 Uint8List _compress(Uint8List bytes) {
-  final decoded = image.decodeImage(bytes);
-  if (decoded == null)
+  image.Image? decoded;
+  try {
+    decoded = image.decodeImage(bytes);
+  } catch (_) {
     throw const FormatException('Choose a valid image file.');
+  }
+  if (decoded == null) {
+    throw const FormatException('Choose a valid image file.');
+  }
   final oriented = image.bakeOrientation(decoded);
   final resized = oriented.width > 800
       ? image.copyResize(oriented, width: 800)

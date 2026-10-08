@@ -77,25 +77,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           onSelected: (value) =>
                               history.favoritesOnly.value = value,
                         ),
-                        DropdownButton<HistorySort>(
-                          value: history.sort.value,
-                          items: const [
-                            DropdownMenuItem(
-                              value: HistorySort.newest,
-                              child: Text('Newest first'),
-                            ),
-                            DropdownMenuItem(
-                              value: HistorySort.oldest,
-                              child: Text('Oldest first'),
-                            ),
-                            DropdownMenuItem(
-                              value: HistorySort.name,
-                              child: Text('Name A–Z'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) history.sort.value = value;
-                          },
+                        SizedBox(
+                          width: 260,
+                          child: DropdownButton<HistorySort>(
+                            isExpanded: true,
+                            value: history.sort.value,
+                            items: const [
+                              DropdownMenuItem(
+                                value: HistorySort.newest,
+                                child: Text(
+                                  'Newest first',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: HistorySort.oldest,
+                                child: Text(
+                                  'Oldest first',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: HistorySort.name,
+                                child: Text(
+                                  'Name A–Z',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) history.sort.value = value;
+                            },
+                          ),
                         ),
                       ],
                     ),

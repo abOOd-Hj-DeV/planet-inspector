@@ -10,6 +10,15 @@ class DelayedImages extends FakeImages {
   Future<List<ImageModel>> load(int userId) => response.future;
 }
 
+class DelayedFavorite extends FakeImages {
+  final changed = Completer<void>();
+  @override
+  Future<void> setFavorite(int id, int userId, bool favorite) async {
+    await changed.future;
+    await super.setFavorite(id, userId, favorite);
+  }
+}
+
 void main() {
   late FakeImages repository;
   late ImageController history;
@@ -96,4 +105,26 @@ void main() {
     expect(controller.images, isEmpty);
     expect(controller.isLoading.value, isFalse);
   });
+  test(
+    'a pending favorite cannot reload the previous account after a switch',
+    () async {
+      final delayed = DelayedFavorite();
+      await delayed.save(
+        const ImageModel(plantName: 'Private', description: '', imagePath: ''),
+        1,
+      );
+      await delayed.save(
+        const ImageModel(plantName: 'Current', description: '', imagePath: ''),
+        2,
+      );
+      final controller = ImageController(delayed);
+      await controller.loadImages(1);
+      final change = controller.toggleFavorite(controller.images.single, 1);
+      controller.clearImages();
+      await controller.loadImages(2);
+      delayed.changed.complete();
+      await change;
+      expect(controller.images.single.plantName, 'Current');
+    },
+  );
 }

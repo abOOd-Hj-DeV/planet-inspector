@@ -51,12 +51,13 @@ class _AuthScreenState extends State<AuthScreen> {
         Get.offAllNamed(AppRoutes.home);
       }
     } catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(
           () => _error = error is AuthException
               ? error.message
               : 'Something went wrong. Please try again.',
         );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

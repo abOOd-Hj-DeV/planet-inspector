@@ -24,10 +24,11 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       final auth = Get.find<AuthController>();
       await auth.restoreSession();
-      if (mounted)
+      if (mounted) {
         Get.offAllNamed(
           auth.isLoggedIn.value ? AppRoutes.home : AppRoutes.welcome,
         );
+      }
     } catch (_) {
       if (mounted) setState(() => _failed = true);
     }
